@@ -94,9 +94,13 @@ document.querySelectorAll('.art').forEach(a=>a.innerHTML='<b class="orn"></b><di
 window.__xmasApply=function(d){
   if(!d)return;
   Object.assign(CFG,d);
+  // Bỏ trống lời chào → tự ghép lời chào chuẩn kèm TÊN THẬT (không giữ tên mặc định trong card)
+  if(!d.to&&CFG.name)CFG.to='Gửi em, '+CFG.name;
   $('title').textContent=CFG.name;
   $('sig').textContent=CFG.sign;
   document.querySelectorAll('.art').forEach(a=>a.innerHTML='<b class="orn"></b><div class="mc">Merry<br>Christmas</div><p>Dành tặng '+CFG.name+'</p>');
+  // Dữ liệu tới trễ sau khi thiệp đã mở (network chậm, user chạm nhanh) → gõ lại từ đầu bằng nội dung mới
+  if(opened){TO=null;MS=null;fin=0;$('to').textContent='';$('msg').textContent='';$('msg').className='';$('sig').classList.remove('on');fitMsg();}
 };
 const pick=w=>{const u=R();let s=0;for(let i=0;i<w.length;i++){s+=w[i];if(u<s)return i}return 0};
 
@@ -395,18 +399,23 @@ let last=performance.now();
     gone.innerHTML='<div style="font-size:42px;color:#ffe3a0;margin-bottom:10px">&#10052;</div>'
       +'<div style="font-size:clamp(22px,6vw,30px);color:#ffe3a0;margin-bottom:8px">'+title+'</div>'
       +'<p style="font-size:14px;opacity:.8;max-width:340px;line-height:1.6;margin-bottom:20px">'+sub+'</p>'
+      +(id?'<a href="'+CREATE_URL+'?id='+id+'" target="_blank" rel="noopener" style="display:inline-block;padding:12px 22px;border-radius:12px;background:linear-gradient(135deg,#7c2d12,#ea580c);color:#fff;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:10px">Gia hạn link bằng Xu</a><br>':'')
       +'<a href="'+CREATE_URL+'" target="_blank" rel="noopener" style="display:inline-block;padding:12px 22px;border-radius:12px;background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff;font-weight:700;font-size:14px;text-decoration:none">Tạo thiệp mới — miễn phí</a>';
     document.body.appendChild(gone);
   }
   function startTimer(exp){
     var el=document.createElement('div');
-    el.style.cssText='position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;color:#ffe3a0;background:rgba(10,15,30,.55);border:1px solid rgba(255,215,120,.35);border-radius:999px;padding:7px 14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none';
+    // Chip đếm giờ BẤM ĐƯỢC → mở trang quản lý link (gia hạn bằng Xu) trên site chính
+    el.style.cssText='position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);z-index:60;font:600 11px/1 system-ui,sans-serif;letter-spacing:.06em;color:#ffe3a0;background:rgba(10,15,30,.55);border:1px solid rgba(255,215,120,.35);border-radius:999px;padding:7px 14px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:auto;cursor:pointer';
+    el.title='Gia hạn link bằng Xu — mở trang quản lý link';
+    el.onclick=function(){window.open(CREATE_URL+'?id='+id,'_blank','noopener')};
     document.body.appendChild(el);
     function up(){
       var r=exp-Date.now();
-      if(r<=0){el.textContent='Hết thời gian hiển thị';showGone('Link đã hết hạn','Mỗi link thiệp có thời gian hiển thị riêng. Tạo thiệp mới miễn phí, hoặc dùng Xu giữ link lâu hơn nhé.');return}
+      if(r<=0){el.textContent='Hết thời gian hiển thị';showGone('Link đã hết hạn','Mỗi link thiệp có thời gian hiển thị riêng. Gia hạn bằng Xu hoặc tạo thiệp mới miễn phí nhé.');return}
       var s=Math.floor(r/1000),m=Math.floor(s/60),h=Math.floor(m/60),d=Math.floor(h/24);
-      el.textContent=d>0?('Còn '+d+' ngày '+(h%24)+' giờ'):(h>0?('Còn '+h+':'+String(m%60).padStart(2,'0')):('Còn '+String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0')));
+      var t=d>0?('Còn '+d+' ngày '+(h%24)+' giờ'):(h>0?('Còn '+h+':'+String(m%60).padStart(2,'0')):('Còn '+String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0')));
+      el.innerHTML=t+' <span style="opacity:.55">· Gia hạn</span>';
     }
     up();timer=setInterval(up,1000);
   }
